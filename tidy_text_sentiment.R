@@ -9,8 +9,9 @@ library(tidytext)
 library(tidyr)
 
 # 導入資料集
-setwd("C:\\HN_TC_experiment\\Dataset\\Kaggle TC")
-script <- read.csv("(clean)train.csv", stringsAsFactors=FALSE)
+path = 'C:\\user\\'
+setwd(path)
+script <- read.csv("(sentimentr)test_data.csv", stringsAsFactors=FALSE)
 
 # 如果沒有索引值或唯一值，可以用預設的index(在R叫row names)作為索引欄位
 # script$index = row.names(script)
@@ -18,7 +19,7 @@ script <- read.csv("(clean)train.csv", stringsAsFactors=FALSE)
 # 依據clear_comment_spell欄位，將每個句子拆成一個個單詞(注意每個資料集的文本欄位名)
 tidy_test <- script %>%
 unnest_tokens(word, clear_text_spell)
-View(tidy_test)
+
 
 # inner_join調用NRC情緒詞典，會顯示出每評論中每個有情緒單詞的情緒標籤
 # 另外把情緒數量寫入tidy_sen，並去除正負向，只留下八種情緒
@@ -27,28 +28,28 @@ inner_join(get_sentiments("nrc")) %>%
 count(id, sentiment) %>%
 filter(sentiment != "negative" & sentiment != "positive") %>%
 arrange(id)
-View(tidy_sen)
+
 
 # 計算每條評論的平均情緒數
 tidy_sen_comment <- group_by(tidy_sen, id) %>%
 summarise(nSentiment= n(), meanSentiment=mean(n))
-View(tidy_sen_comment)
+
 
 # 合併兩個數據框，tidy_sen將會根據comment_counter顯示其meanSentiment
 tidy_sen_comment_merge <- merge(tidy_sen, tidy_sen_comment)
-View(tidy_sen_comment_merge)
+
 
 # 建立新數據框tidy_sen_comment_emotion_Label存放顯著情緒標籤
 # 以$創建新欄位Sign_sen，指定為meanSentiment與n於get_sign_emotion的回傳結果
 tidy_sen_comment_emotion_Label <- tidy_sen_comment_merge
 tidy_sen_comment_emotion_Label$Sign_sen <- ifelse(tidy_sen_comment_merge$n > tidy_sen_comment_merge$meanSentiment, 1, 0)
-View(tidy_sen_comment_emotion_Label)
+
 
 # 儲存每條評論的顯著情緒標籤
 tidy_sign_sen_comment <- group_by(tidy_sen_comment_emotion_Label, id) %>%
 filter(Sign_sen==1) %>%
 summarise(Sign_sen_str= list(sentiment))
-View(tidy_sign_sen_comment)
+
 
 # 複製成新數據框tidy_eight_sen_label存放八個情緒標籤
 tidy_eight_sen_label <- tidy_sign_sen_comment
@@ -72,11 +73,8 @@ View(data_eight_sen_merge)
 data_eight_sen_merge[is.na(data_eight_sen_merge)] <- 0
 View(data_eight_sen_merge)
 
-# 欄位Sign_sen_str資料型態為list會影響無法存成csv，要轉換成字串(character)型態
-data_eight_sen_merge$Sign_sen_str <- as.character(data_eight_sen_merge$Sign_sen_str)
+# 刪除數據集中多餘欄位
+data_eight_sen_merge <- subset(data_eight_sen_merge, select = -Sign_sen_str)
 
-# 最後存成CSV檔，用paste連接路徑名(path_out)與檔案名，row.names =F 表示不儲存列編號
-path_out = 'C:\\HN_TC_experiment\\Dataset\\Kaggle TC\\'
-# write.csv(data_eight_sen_merge, file=paste(path_out,'(tidytext)(simple_features)test_data.csv', sep=''), row.names=F)
-# write.csv(data_eight_sen_merge, file=paste(path_out,'(tidytext)(simple_features)train_data.csv', sep=''), row.names=F)
-write.csv(data_eight_sen_merge, file=paste(path_out,'(tidytext)(clean)train.csv', sep=''), row.names=F)
+# 最後存成CSV檔，用paste連接路徑名與檔案名，row.names =F 表示不儲存列編號
+write.csv(data_eight_sen_merge, file=paste(path,'(tidytext)(sentimentr)test_data.csv', sep=''), row.names=F)
