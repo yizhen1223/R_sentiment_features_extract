@@ -5,8 +5,9 @@ install.packages("sentimentr")
 library(sentimentr)
 
 # 導入資料集
-setwd("C:\\HN_TC_experiment\\Dataset\\SOCC\\")
-script <- read.csv("(tidytext)(clean)SOCC_data_all.csv", stringsAsFactors=FALSE)
+path = 'C:\\user\\'
+setwd(path)
+script <- read.csv("test_data.csv", stringsAsFactors=FALSE)
 # 如果沒有索引值或唯一值，可以用預設的index(在R叫row names)作為索引欄位
 # script$index = row.names(script)
 
@@ -30,13 +31,11 @@ View(comment_sentiment_merge)
 # 遺失值補0
 comment_sentiment_merge[is.na(comment_sentiment_merge)] <- 0
 
-# 刪除數據集中原本沒有的element_id欄位
-comment_sentiment_merge$element_id <- NULL
+# 刪除數據集中原本沒有的element_id欄位與word_count欄位
+comment_sentiment_merge <- subset(comment_sentiment_merge, select = c(-element_id, -word_count))
 
 # 最後存成CSV檔，用paste連接路徑名(path_out)與檔案名，row.names =F 表示不儲存列編號
-path_out = 'C:\\HN_TC_experiment\\Dataset\\SOCC\\'
-write.csv(comment_sentiment_merge, file=paste(path_out,'(sentimentr)(tidytext)(clean)SOCC_data_all.csv', sep=''), row.names=F)
-
+write.csv(comment_sentiment_merge, file=paste(path,'(sentimentr)test_data.csv.csv', sep=''), row.names=F)
 
 # sentiment_by() Returns a data.table with grouping variables plus:
 # • element_id - The id number of the original vector passed to sentiment
